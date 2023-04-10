@@ -1,8 +1,9 @@
 const express = require('express');
 const axios = require('axios').default;
+const googleTTS = require('google-tts-api');
+const { chatGPT } = require('./utils');
 const { Telegraf } = require('telegraf');
 const { Configuration, OpenAIApi } = require('openai');
-const { chatGPT } = require('./utils');
 
 
 // Config .env 
@@ -63,8 +64,16 @@ bot.command('receta', async ctx => {
 
         const elaboracion = await chatGPT(`Dame la elaboracion para la receta con este titulo:${titulo}`)
 
-        ctx.reply(titulo);
-        ctx.reply(elaboracion);
+        // Transformar el titulo a Audio
+        const audioUrl = googleTTS.getAudioUrl(titulo, {
+            lang: 'es',
+            slow: false,
+            host: 'https://translate.google.es'
+        });
+
+        await ctx.reply(titulo);            //usamos los await para asegurarnos de que sigan este orden
+        await ctx.replyWithAudio(audioUrl);
+        await ctx.reply(elaboracion);
     } catch (error) {
         ctx.reply('No puedo responder en estos momentos. Intentalo mas tarde.')
     }
